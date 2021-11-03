@@ -24,6 +24,23 @@ import NumberFormats from '../NumberFormats';
 const siFormatter = d3Format(`.3~s`);
 const float2PointFormatter = d3Format(`.2~f`);
 const float4PointFormatter = d3Format(`.4~f`);
+const PREFIXES = ['', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+function binaryFormatParts(num: number) {
+  if (!Number.isFinite(num) || Math.abs(num) < 1) {
+    return [num, 0];
+  }
+  const exponent = Math.log2(Math.abs(num));
+  const prefix = Math.min(Math.trunc(exponent / 10), PREFIXES.length - 1);
+  return [num / 2 ** (prefix * 10), prefix];
+}
+function binaryFormat(num: number): string {
+  const [x, prefix] = binaryFormatParts(num);
+  const displayNumber = new Intl.NumberFormat('default', {
+    maximumFractionDigits: 2,
+    style: 'decimal',
+  }).format(x);
+  return `${displayNumber} ${PREFIXES[prefix]}`;
+}
 
 function formatValue(value: number) {
   if (value === 0) {
@@ -33,7 +50,7 @@ function formatValue(value: number) {
   if (absoluteValue >= 1000) {
     // Normal human being are more familiar
     // with billion (B) that giga (G)
-    return siFormatter(value).replace('G', 'B');
+    return binaryFormat(value);
   }
   if (absoluteValue >= 1) {
     return float2PointFormatter(value);
